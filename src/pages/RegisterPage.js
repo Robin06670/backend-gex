@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import bcrypt from "bcryptjs";
 import logo from "../assets/logo.png";
 
 export default function RegisterPage() {
@@ -14,6 +13,9 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState("");
 
   const handleRegister = async () => {
+    setError(""); // Réinitialise les erreurs
+    setSuccess("");
+
     if (!nom || !prenom || !email || !password || !confirmPassword) {
       setError("Tous les champs sont obligatoires.");
       return;
@@ -23,25 +25,24 @@ export default function RegisterPage() {
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    if (users.some((user) => user.email === email)) {
-      setError("Cet email est déjà utilisé.");
-      return;
-    }
-
     try {
-      // 🔥 Hachage du mot de passe
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // 🔹 Envoyer les données au backend
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nom, surname: prenom, email, password }),
+      });
 
-      const newUser = { nom, prenom, email, password: hashedPassword };
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
+      const data = await response.json();
 
-      setSuccess("Inscription réussie ! Vous allez être redirigé.");
-      setTimeout(() => navigate("/login"), 2000);
-    } catch (error) {
-      setError("Une erreur est survenue lors de l'inscription.");
-      console.error("Erreur de hachage du mot de passe :", error);
+      if (!response.ok) {
+        throw new Error(data.message || "Une erreur est survenue.");
+      }
+
+      setSuccess("Inscription réussie ! Redirection en cours...");
+      setTimeout(() => navigate("/login"), 2000); // Redirige après 2 sec
+    } catch (err) {
+      setError(err.message);
     }
   };
 

@@ -3,17 +3,15 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 
-// Importer les routes
-const authRoutes = require("./routes/authRoutes"); 
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Connexion à la base de données
+// Connexion à MongoDB
 connectDB();
 
-// Définir les routes API
 app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 5000;

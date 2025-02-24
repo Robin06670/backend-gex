@@ -1,18 +1,20 @@
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const connectDB = require("./config/db");
 
-const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-}, { timestamps: true });
+const authRoutes = require("./routes/authRoutes");
 
-// Hachage du mot de passe avant enregistrement
-UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
+const app = express();
+app.use(express.json());
+app.use(cors());
 
-module.exports = mongoose.model("User", UserSchema);
+// Connexion à MongoDB
+connectDB();
+mongoose.connection.useDb("gex"); // 🔥 Assure que nous utilisons la base 'gex'
+
+app.use("/api/auth", authRoutes);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`✅ Serveur démarré sur le port ${PORT}`));
