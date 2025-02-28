@@ -12,7 +12,7 @@ const Topbar = () => {
 
   return (
     <div className="bg-white shadow flex justify-between items-center p-4">
-      <h2 className="text-lg font-semibold">Bienvenue sur GEX</h2> {/* Changement ici */}
+      <h2 className="text-lg font-semibold">Bienvenue sur GEX</h2>
       <div className="flex items-center space-x-4">
         {profileData?.logo && (
           <img 
@@ -21,7 +21,9 @@ const Topbar = () => {
             className="w-12 h-12 rounded-full shadow-lg object-cover"
           />
         )}
-        <span className="text-gray-600">Bienvenue, Robin</span>
+        <span className="text-gray-600">
+          Bienvenue, {profileData?.firstName || "Utilisateur"}
+        </span>
       </div>
     </div>
   );
