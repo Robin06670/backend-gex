@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const ClientSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User", // Lien vers l'utilisateur propriétaire
+    ref: "User",
     required: true
   },
   name: {
@@ -21,7 +21,11 @@ const ClientSchema = new mongoose.Schema({
   },
   collaborator: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Collaborator" // Lien vers le collaborateur
+    ref: "Collaborator"
+  },
+  theoreticalTime: {
+    type: Number,
+    default: 0 // Optionnel : permet de forcer 0 si jamais rien n’est défini
   },
   isArchived: {
     type: Boolean,
@@ -32,4 +36,3 @@ const ClientSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.models.Client || mongoose.model("Client", ClientSchema);
-

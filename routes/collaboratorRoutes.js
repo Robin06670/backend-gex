@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const Collaborator = require("../models/collaborator");
-const Client = require("../models/client");
+const Collaborator = require("../models/Collaborator");
+const Client = require("../models/Client");
 const auth = require("../middleware/authMiddleware");
 
 // 📌 Récupérer tous les collaborateurs de l'utilisateur connecté
@@ -30,8 +30,13 @@ router.get("/time-data", auth, async (req, res) => {
     const data = collaborators
       .filter(collab => collab.weeklyHours)
       .map(collab => {
-        const clientsManaged = clients.filter(client => client.collaborator.equals(collab._id));
-        const totalTimeConsumed = clientsManaged.reduce((sum, client) => sum + client.theoreticalTime, 0);
+        const clientsManaged = clients.filter(
+          client => client.collaborator && client.collaborator.equals(collab._id)
+        );
+        const totalTimeConsumed = clientsManaged.reduce(
+          (sum, client) => sum + (client.theoreticalTime || 0),
+          0
+        );
 
         return {
           _id: collab._id,
@@ -42,7 +47,7 @@ router.get("/time-data", auth, async (req, res) => {
           clients: clientsManaged.map(client => ({
             _id: client._id,
             name: client.name,
-            timeConsumed: client.theoreticalTime,
+            timeConsumed: client.theoreticalTime || 0,
           })),
         };
       });

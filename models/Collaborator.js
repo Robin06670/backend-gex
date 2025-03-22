@@ -6,29 +6,18 @@ const CollaboratorSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
-  name: {
-    type: String,
-    required: true
-  },
-  role: {
-    type: String
-  },
-  manager: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Collaborator"
-  },
-  salary: {
-    type: Number
-  },
-  email: {
-    type: String
-  },
-  phone: {
-    type: String
-  }
+  firstName: { type: String },
+  lastName: { type: String },
+  role: { type: String },
+  gender: { type: String },
+  salary: { type: Number },
+  cost: { type: Number },
+  weeklyHours: { type: Number },
+  managers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Collaborator" }],
+  email: { type: String },
+  phone: { type: String }
 }, {
   timestamps: true
 });
 
 module.exports = mongoose.models.Collaborator || mongoose.model("Collaborator", CollaboratorSchema);
-
