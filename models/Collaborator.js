@@ -30,4 +30,5 @@ const CollaboratorSchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model("Collaborator", CollaboratorSchema);
+module.exports = mongoose.models.Collaborator || mongoose.model("Collaborator", CollaboratorSchema);
+
