@@ -25,6 +25,9 @@ app.use("/api/users", userRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/collaborators", collaboratorRoutes);
 app.use("/api/fixedcosts", fixedCostsRoutes); // Utiliser la nouvelle route
+app.get("/api/test", (req, res) => {
+    res.status(200).json({ message: "🚀 L'API publique fonctionne parfaitement !" });
+  });  
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Serveur démarré sur le port ${PORT}`));
