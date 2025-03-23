@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
-const FixedCost = require("../models/fixedCost");
+const FixedCost = require("../models/FixedCost");
 
 // 📌 Créer ou mettre à jour les frais fixes de l'utilisateur
 router.post("/", auth, async (req, res) => {
