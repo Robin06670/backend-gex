@@ -11,6 +11,23 @@ const ClientSchema = new mongoose.Schema({
     ref: "Cabinet",
     required: true
   },
+  firstName: {
+    type: String,
+    required: true
+  },
+  lastName: {
+    type: String,
+    required: true
+  },
+  phone: {
+    type: String
+  },  
+  email: {
+    type: String
+  },
+  address: {
+    type: String
+  },
   activity: {
     type: String
   },
