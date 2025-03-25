@@ -110,7 +110,7 @@ router.get("/gross-margin", auth, async (req, res) => {
 router.get("/gross-margin-by-collaborator", auth, async (req, res) => {
   try {
     const marginByCollaborator = await Client.aggregate([
-      { $match: { user: req.user._id } },
+      { $match: { cabinet: new mongoose.Types.ObjectId(req.user.cabinet) } },
       { $group: { _id: "$collaborator", revenue: { $sum: "$fees" } } },
       {
         $lookup: {
