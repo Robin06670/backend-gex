@@ -21,8 +21,14 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   cabinet: {
-    type: mongoose.Schema.Types.Mixed, // à adapter selon ta structure exacte
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Cabinet", // 🔗 Association directe à un cabinet
   },
+  role: {
+    type: String,
+    enum: ['admin', 'expert', 'collaborateur'],
+    default: 'collaborateur',
+  }
 }, {
   timestamps: true
 });

@@ -10,6 +10,7 @@ const userRoutes = require("./routes/userRoutes");
 const clientRoutes = require("./routes/clientRoutes");
 const collaboratorRoutes = require("./routes/collaboratorRoutes");
 const fixedCostsRoutes = require("./routes/fixedCostsRoutes"); // Importer la nouvelle route
+const inviteRoutes = require("./routes/inviteRoutes");
 
 const app = express();
 app.use(express.json());
@@ -25,6 +26,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/collaborators", collaboratorRoutes);
 app.use("/api/fixedcosts", fixedCostsRoutes); // Utiliser la nouvelle route
+app.use("/api/invites", inviteRoutes);
 app.get("/api/test", (req, res) => {
     res.status(200).json({ message: "🚀 L'API publique fonctionne parfaitement !" });
   });  

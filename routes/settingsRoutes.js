@@ -1,63 +1,96 @@
 const express = require("express");
 const Cabinet = require("../models/Cabinet");
+const User = require("../models/User");
 const verifyToken = require("../middleware/authMiddleware");
-
+const mongoose = require("mongoose");
 const router = express.Router();
 
-// 🔹 Récupérer UNIQUEMENT les paramètres de l'utilisateur connecté
+// 🔹 Obtenir les paramètres du cabinet pour l'utilisateur connecté
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const cabinet = await Cabinet.findOne({ user: req.user.id });
+    const userId = req.user.id;
 
+    console.log("🔍 Cabinet recherché pour l'utilisateur :", req.user.id);
+
+    const cabinet = await Cabinet.findOne({
+      $or: [
+        { user: new mongoose.Types.ObjectId(req.user.id) },
+        { members: new mongoose.Types.ObjectId(req.user.id) }
+      ]
+    });    
+
+    console.log("📦 Cabinet trouvé :", cabinet);
+    
     if (!cabinet) {
-      console.log(`⚠️ Aucun cabinet trouvé pour l'utilisateur ${req.user.id}`);
-      return res.status(404).json({ message: "Aucun cabinet trouvé pour cet utilisateur." });
+      return res.status(404).json({ message: "Cabinet non trouvé." });
     }
 
-    console.log(`✅ Paramètres du cabinet récupérés pour l'utilisateur ${req.user.id}`);
-    res.json(cabinet);
-  } catch (err) {
-    console.error("❌ Erreur lors de la récupération des paramètres :", err);
-    res.status(500).json({ message: "Erreur serveur" });
+    res.status(200).json(cabinet);
+  } catch (error) {
+    console.error("Erreur lors de la récupération du cabinet :", error);
+    res.status(500).json({ message: "Erreur serveur." });
   }
 });
 
-// 🔹 Enregistrer ou mettre à jour les paramètres de l'utilisateur connecté
+// 🔹 Enregistrer ou mettre à jour les paramètres du cabinet
 router.post("/", verifyToken, async (req, res) => {
   try {
-    const { cabinetName, address, collaborators, phone, email, logo } = req.body;
     const userId = req.user.id;
 
-    let cabinet = await Cabinet.findOne({ user: userId });
+    let cabinet = await Cabinet.findOne({
+      $or: [{ user: userId }, { members: userId }],
+    });
+
+    const {
+      cabinetName,
+      address,
+      collaborators,
+      phone,
+      email,
+      logo,
+    } = req.body;
 
     if (cabinet) {
-      // ✅ Mise à jour des paramètres existants
+      // ✅ Mise à jour du cabinet existant
       cabinet.cabinetName = cabinetName;
       cabinet.address = address;
       cabinet.collaborators = collaborators;
       cabinet.phone = phone;
       cabinet.email = email;
       cabinet.logo = logo;
+
+      await cabinet.save();
+      res.status(200).json({ message: "Cabinet mis à jour." });
     } else {
-      // ✅ Création d'un nouveau cabinet pour l'utilisateur
-      cabinet = new Cabinet({
+      // ❌ Si aucun cabinet trouvé ET que l'utilisateur n'est pas admin → Interdit
+      if (req.user.role !== "admin") {
+        return res
+          .status(403)
+          .json({ message: "Seul un administrateur peut créer un cabinet." });
+      }
+
+      // ✅ Création d’un nouveau cabinet (cas très spécifique)
+      const newCabinet = new Cabinet({
         user: userId,
+        members: [userId],
         cabinetName,
         address,
         collaborators,
         phone,
         email,
-        logo
+        logo,
       });
+
+      await newCabinet.save();
+
+      // Mise à jour de l'utilisateur pour lier le cabinet
+      await User.findByIdAndUpdate(userId, { cabinet: newCabinet._id });
+
+      res.status(201).json({ message: "Cabinet créé avec succès." });
     }
-
-    await cabinet.save();
-    console.log(`✅ Cabinet mis à jour pour l'utilisateur ${userId} :`, cabinet);
-
-    res.json({ message: "Paramètres enregistrés avec succès", cabinet });
-  } catch (err) {
-    console.error("❌ Erreur lors de l'enregistrement des paramètres :", err);
-    res.status(500).json({ message: "Erreur serveur" });
+  } catch (error) {
+    console.error("Erreur lors de l'enregistrement du cabinet :", error);
+    res.status(500).json({ message: "Erreur serveur." });
   }
 });
 
