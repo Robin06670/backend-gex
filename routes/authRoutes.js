@@ -89,7 +89,15 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Mot de passe incorrect" });
     }
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+        cabinet: user.cabinet // 👈 ajoute cette ligne !
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );    
 
     console.log("✅ Connexion réussie, token généré !");
     res.json({

@@ -7,7 +7,7 @@ const auth = require("../middleware/authMiddleware");
 // 📌 Route pour récupérer le nombre total de clients (de l'utilisateur)
 router.get("/count", auth, async (req, res) => {
   try {
-    const count = await Client.countDocuments({ user: req.user.id });
+    const count = await Client.countDocuments({ cabinet: req.user.cabinet }    );
     console.log(`📊 Nombre total de clients (user ${req.user.id}) : ${count}`);
     res.status(200).json({ count });
   } catch (error) {
@@ -20,7 +20,7 @@ router.get("/count", auth, async (req, res) => {
 router.get("/revenue", auth, async (req, res) => {
   try {
     const mongoose = require("mongoose");
-    const filter = { user: new mongoose.Types.ObjectId(req.user.id) };
+    const filter = { cabinet: new mongoose.Types.ObjectId(req.user.cabinet) };
 
     console.log("Filter for revenue:", filter);
 
@@ -42,7 +42,7 @@ router.get("/revenue", auth, async (req, res) => {
 router.get("/revenue-by-collaborator", auth, async (req, res) => {
   try {
     const mongoose = require("mongoose");
-    const filter = { user: new mongoose.Types.ObjectId(req.user.id) };
+    const filter = { cabinet: new mongoose.Types.ObjectId(req.user.cabinet) };
 
     console.log("Filter for revenue by collaborator:", filter);
 
@@ -86,11 +86,12 @@ router.get("/revenue-by-collaborator", auth, async (req, res) => {
 router.get("/gross-margin", auth, async (req, res) => {
   try {
     const totalRevenue = await Client.aggregate([
-      { $match: { user: req.user._id } },
+      { $match: { cabinet: new mongoose.Types.ObjectId(req.user.cabinet) } },
       { $group: { _id: null, total: { $sum: "$fees" } } }
     ]);
 
     const totalPayroll = await Collaborator.aggregate([
+      { $match: { cabinet: new mongoose.Types.ObjectId(req.user.cabinet) } },
       { $group: { _id: null, totalCost: { $sum: "$cost" } } }
     ]);
 
@@ -153,7 +154,7 @@ const calculateMargin = async (fees, collaboratorId, theoreticalTime) => {
 // 📌 Récupérer tous les clients de l'utilisateur connecté
 router.get("/", auth, async (req, res) => {
   try {
-    let filter = { user: req.user.id };
+    let filter = { cabinet: req.user.cabinet }; // 👈 ajout ici
 
     if (req.query.collaborator) {
       filter.collaborator = req.query.collaborator;
@@ -210,7 +211,8 @@ router.post("/", auth, async (req, res) => {
       theoreticalTime: Number(theoreticalTime),
       collaborator,
       margin,
-      user: req.user.id // ✅ Lien direct avec l'utilisateur connecté
+      user: req.user.id, // ✅ Lien direct avec l'utilisateur connecté
+      cabinet: req.user.cabinet  // 👈 ajout ici
     });
 
     await newClient.save();
