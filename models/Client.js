@@ -21,7 +21,7 @@ const ClientSchema = new mongoose.Schema({
   },
   phone: {
     type: String
-  },  
+  },
   email: {
     type: String
   },
@@ -31,10 +31,16 @@ const ClientSchema = new mongoose.Schema({
   activity: {
     type: String
   },
+  company: {                  // ✅ AJOUTÉ
+    type: String
+  },
   fees: {
     type: Number
   },
-  charges: {
+  cost: {                     // ✅ AJOUTÉ
+    type: Number
+  },
+  margin: {                   // ✅ AJOUTÉ
     type: Number
   },
   collaborator: {
@@ -43,7 +49,7 @@ const ClientSchema = new mongoose.Schema({
   },
   theoreticalTime: {
     type: Number,
-    default: 0 // Optionnel : permet de forcer 0 si jamais rien n’est défini
+    default: 0
   },
   isArchived: {
     type: Boolean,
