@@ -152,7 +152,7 @@ router.post("/", verifyToken, async (req, res) => {
     const newCollab = new Collaborator({
       ...req.body,
       cabinet: req.user.cabinet, // 👈 injecté dynamiquement
-      user: req.user._id
+      user: req.user.id
     });
 
     await newCollab.save();
