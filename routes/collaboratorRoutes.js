@@ -7,7 +7,7 @@ const auth = require("../middleware/authMiddleware");
 // 📌 Récupérer tous les collaborateurs de l'utilisateur connecté
 router.get("/", auth, async (req, res) => {
   try {
-    const collaborators = await Collaborator.find({ user: req.user.id }).lean();
+    const collaborators = await Collaborator.find({ cabinet: req.user.cabinet }).lean();
 
     const formattedCollaborators = collaborators.map(collab => ({
       ...collab,
@@ -24,8 +24,8 @@ router.get("/", auth, async (req, res) => {
 // 📌 Temps consommé
 router.get("/time-data", auth, async (req, res) => {
   try {
-    const collaborators = await Collaborator.find({ user: req.user.id });
-    const clients = await Client.find({ user: req.user.id });
+    const collaborators = await Collaborator.find({ cabinet: req.user.cabinet });
+    const clients = await Client.find({ cabinet: req.user.cabinet });
 
     const data = collaborators
       .filter(collab => collab.weeklyHours)
@@ -63,7 +63,7 @@ router.get("/time-data", auth, async (req, res) => {
 router.get("/payroll", auth, async (req, res) => {
   try {
     const mongoose = require("mongoose");
-    const userId = new mongoose.Types.ObjectId(req.user.id); // ✅ cast en ObjectId
+    const userId = new mongoose.Types.ObjectId(req.user.cabinet); // ✅ cast en ObjectId
 
     const totalPayroll = await Collaborator.aggregate([
       { $match: { user: userId } },
@@ -81,7 +81,7 @@ router.get("/payroll", auth, async (req, res) => {
 // 📌 Masse salariale par collaborateur
 router.get("/payroll-by-collaborator", auth, async (req, res) => {
   try {
-    const payrollByCollaborator = await Collaborator.find({ user: req.user.id })
+    const payrollByCollaborator = await Collaborator.find({ cabinet: req.user.cabinet })
       .select("_id firstName lastName cost");
 
     res.status(200).json(payrollByCollaborator);
@@ -95,7 +95,7 @@ router.get("/payroll-by-collaborator", auth, async (req, res) => {
 router.get("/count-with-managers", auth, async (req, res) => {
   try {
     const count = await Collaborator.countDocuments({
-      user: req.user.id,
+      cabinet: req.user.cabinet,
       managers: { $exists: true, $not: { $size: 0 } }
     });
     res.status(200).json({ count });
@@ -108,8 +108,8 @@ router.get("/count-with-managers", auth, async (req, res) => {
 // 📌 Clients par collaborateur
 router.get("/clients-by-collaborator", auth, async (req, res) => {
   try {
-    const clients = await Client.find({ user: req.user.id });
-    const collaborators = await Collaborator.find({ user: req.user.id });
+    const clients = await Client.find({ cabinet: req.user.cabinet });
+    const collaborators = await Collaborator.find({ cabinet: req.user.cabinet });
 
     const clientsByCollaborator = collaborators.map(collab => {
       const clientsCount = clients.filter(client => client.collaborator.toString() === collab._id.toString()).length;
@@ -130,7 +130,7 @@ router.get("/:id", auth, async (req, res) => {
       return res.status(400).json({ message: "ID du collaborateur invalide." });
     }
 
-    const collaborator = await Collaborator.findOne({ _id: req.params.id, user: req.user.id }).lean();
+    const collaborator = await Collaborator.findOne({ _id: req.params.id, cabinet: req.user.cabinet }).lean();
 
     if (!collaborator) {
       return res.status(404).json({ error: "Collaborateur introuvable ou non autorisé" });
@@ -150,7 +150,7 @@ router.post("/", auth, async (req, res) => {
   try {
     const newCollab = new Collaborator({
       ...req.body,
-      user: req.user.id // 🔒 Lien sécurisé
+      cabinet: req.user.cabinet  // 👈 injecté dynamiquement
     });
 
     await newCollab.save();
@@ -165,7 +165,7 @@ router.post("/", auth, async (req, res) => {
 router.put("/:id", auth, async (req, res) => {
   try {
     const updatedCollab = await Collaborator.findOneAndUpdate(
-      { _id: req.params.id, user: req.user.id },
+      { _id: req.params.id, cabinet: req.user.cabinet },
       req.body,
       { new: true }
     ).lean();
@@ -186,7 +186,7 @@ router.delete("/:id", auth, async (req, res) => {
   try {
     const deletedCollab = await Collaborator.findOneAndDelete({
       _id: req.params.id,
-      user: req.user.id
+      cabinet: req.user.cabinet
     });
 
     if (!deletedCollab) {

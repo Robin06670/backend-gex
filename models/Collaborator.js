@@ -6,6 +6,11 @@ const CollaboratorSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
+  cabinet: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Cabinet",
+    required: true
+  },  
   firstName: { type: String },
   lastName: { type: String },
   role: { type: String },
