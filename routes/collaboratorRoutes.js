@@ -150,8 +150,8 @@ router.post("/", auth, async (req, res) => {
   try {
     const newCollab = new Collaborator({
       ...req.body,
-      user: req.user._id,
-      cabinet: req.user.cabinet  // 👈 injecté dynamiquement
+      cabinet: req.user.cabinet, // 👈 injecté dynamiquement
+      user: req.user._id
     });
 
     await newCollab.save();
