@@ -146,7 +146,7 @@ router.get("/:id", auth, async (req, res) => {
 });
 
 // 📌 Ajouter un collaborateur lié à l'utilisateur
-router.post("/", auth, async (req, res) => {
+router.post("/", verifyToken, async (req, res) => {
   try {
     const newCollab = new Collaborator({
       ...req.body,
