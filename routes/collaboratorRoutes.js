@@ -3,6 +3,7 @@ const router = express.Router();
 const Collaborator = require("../models/Collaborator");
 const Client = require("../models/Client");
 const auth = require("../middleware/authMiddleware");
+const verifyToken = require("../middleware/authMiddleware");
 
 // 📌 Récupérer tous les collaborateurs de l'utilisateur connecté
 router.get("/", auth, async (req, res) => {
