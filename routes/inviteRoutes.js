@@ -27,6 +27,24 @@ router.post("/invite", verifyToken, async (req, res) => {
     userToInvite.role = role;
     await userToInvite.save();
 
+    // 🔗 Lier l'utilisateur invité à un collaborateur existant s'il y a correspondance
+    if (role === "collaborateur") {
+      const Collaborator = require("../models/Collaborator");
+      const matchedCollaborator = await Collaborator.findOne({
+        firstName: userToInvite.firstName,
+        lastName: userToInvite.name,
+        cabinet: adminUser.cabinet._id
+      });
+
+      if (matchedCollaborator) {
+        matchedCollaborator.user = userToInvite._id;
+        await matchedCollaborator.save();
+        console.log("✅ Collaborateur lié automatiquement à l'utilisateur :", matchedCollaborator._id);
+      } else {
+        console.log("⚠️ Aucun collaborateur correspondant trouvé pour lier l'utilisateur invité.");
+      }
+    }
+
     // 👥 Met à jour la liste des membres du cabinet
     if (!adminUser.cabinet.members.includes(userToInvite._id)) {
       adminUser.cabinet.members.push(userToInvite._id);
