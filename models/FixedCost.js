@@ -6,6 +6,11 @@ const FixedCostSchema = new mongoose.Schema({
     ref: "User",
     required: true
   },
+  cabinet: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Cabinet",
+    required: true
+  },  
   name: {
     type: String,
     required: true

@@ -2,25 +2,24 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/authMiddleware");
 const FixedCost = require("../models/FixedCost");
+const mongoose = require("mongoose");
 
-// 📌 Créer ou mettre à jour les frais fixes de l'utilisateur
+// 📌 Créer ou mettre à jour les frais fixes du cabinet
 router.post("/", auth, async (req, res) => {
   try {
     const { costs } = req.body;
+    const cabinetId = new mongoose.Types.ObjectId(req.user.cabinet);
 
-    // Cherche s'il existe déjà un doc pour ce user
-    let existing = await FixedCost.findOne({ user: req.user.id });
+    let existing = await FixedCost.findOne({ cabinet: cabinetId });
 
     if (existing) {
-      // Mise à jour si déjà existant
       Object.assign(existing, costs);
       await existing.save();
       return res.status(200).json({ message: "Frais fixes mis à jour avec succès", data: existing });
     } else {
-      // Création sinon
       const fixedCost = new FixedCost({
         ...costs,
-        user: req.user.id
+        cabinet: cabinetId
       });
       await fixedCost.save();
       return res.status(201).json({ message: "Frais fixes enregistrés avec succès", data: fixedCost });
@@ -31,14 +30,15 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-// 📌 Mettre à jour un champ spécifique
+// 📌 Mettre à jour un champ spécifique des frais fixes du cabinet
 router.put("/:field", auth, async (req, res) => {
   try {
     const { field } = req.params;
     const { value } = req.body;
+    const cabinetId = new mongoose.Types.ObjectId(req.user.cabinet);
 
     const updatedFixedCost = await FixedCost.findOneAndUpdate(
-      { user: req.user.id },
+      { cabinet: cabinetId },
       { [field]: value },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
@@ -50,10 +50,12 @@ router.put("/:field", auth, async (req, res) => {
   }
 });
 
-// 📌 Récupérer les frais fixes de l'utilisateur
+// 📌 Récupérer les frais fixes du cabinet
 router.get("/", auth, async (req, res) => {
   try {
-    const fixedCosts = await FixedCost.findOne({ user: req.user.id });
+    const cabinetId = new mongoose.Types.ObjectId(req.user.cabinet);
+    const fixedCosts = await FixedCost.findOne({ cabinet: cabinetId });
+
     res.status(200).json(fixedCosts);
   } catch (error) {
     console.error("❌ Erreur GET frais fixes :", error);
