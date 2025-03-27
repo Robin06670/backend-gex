@@ -67,7 +67,7 @@ router.get("/payroll", auth, async (req, res) => {
     const userId = new mongoose.Types.ObjectId(req.user.cabinet); // ✅ cast en ObjectId
 
     const totalPayroll = await Collaborator.aggregate([
-      { $match: { user: userId } },
+      { $match: { cabinet: req.user.cabinet } },
       { $group: { _id: null, total: { $sum: "$cost" } } }
     ]);
 
