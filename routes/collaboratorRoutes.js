@@ -63,10 +63,11 @@ router.get("/time-data", auth, async (req, res) => {
 // 📌 Masse salariale totale
 router.get("/payroll", auth, async (req, res) => {
   try {
-    const cabinetId = new mongoose.Types.ObjectId(req.user.cabinet);
+    const mongoose = require("mongoose");
+    const userId = new mongoose.Types.ObjectId(req.user.cabinet); // ✅ cast en ObjectId
 
     const totalPayroll = await Collaborator.aggregate([
-      { $match: { cabinet: cabinetId } },
+      { $match: { cabinet: req.user.cabinet } },
       { $group: { _id: null, total: { $sum: "$cost" } } }
     ]);
 
