@@ -60,21 +60,24 @@ router.get("/time-data", auth, async (req, res) => {
   }
 });
 
-// 📌 Masse salariale totale
+// 📌 Masse salariale totale (basé sur cabinet)
 router.get("/payroll", auth, async (req, res) => {
   try {
     const mongoose = require("mongoose");
-    const userId = new mongoose.Types.ObjectId(req.user.cabinet); // ✅ cast en ObjectId
+    const filter = { cabinet: new mongoose.Types.ObjectId(req.user.cabinet) };
 
-    const totalPayroll = await Collaborator.aggregate([
-      { $match: { cabinet: req.user.cabinet } },
+    console.log("Filter for payroll:", filter); // 🧪 debug
+
+    const payroll = await Collaborator.aggregate([
+      { $match: filter },
       { $group: { _id: null, total: { $sum: "$cost" } } }
     ]);
 
-    const payroll = totalPayroll.length > 0 ? totalPayroll[0].total : 0;
-    res.status(200).json({ payroll });
+    console.log("Payroll Aggregation Result:", payroll); // 🧪 debug
+
+    res.status(200).json({ payroll: payroll.length > 0 ? payroll[0].total : 0 });
   } catch (error) {
-    console.error("❌ Erreur masse salariale :", error);
+    console.error("Erreur masse salariale :", error);
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
