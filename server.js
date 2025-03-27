@@ -26,7 +26,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/collaborators", collaboratorRoutes);
 app.use("/api/fixedcosts", fixedCostsRoutes); // Utiliser la nouvelle route
-app.use("/api/invites", inviteRoutes);
+app.use("/api/invite", inviteRoutes);
 app.get("/api/test", (req, res) => {
     res.status(200).json({ message: "🚀 L'API publique fonctionne parfaitement !" });
   });  

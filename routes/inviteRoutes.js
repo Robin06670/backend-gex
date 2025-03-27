@@ -5,7 +5,7 @@ const Cabinet = require("../models/Cabinet");
 const verifyToken = require("../middleware/authMiddleware");
 
 // 🔒 Invite un utilisateur existant à rejoindre le cabinet de l'admin connecté
-router.post("/invites", verifyToken, async (req, res) => {
+router.post("/invite", verifyToken, async (req, res) => {
   try {
     const { email } = req.body;
 
