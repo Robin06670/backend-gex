@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../models/User");
 const Cabinet = require("../models/Cabinet");
+const Collaborator = require("../models/Collaborator");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const verifyToken = require("../middleware/authMiddleware");
@@ -84,6 +85,20 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     console.log("🔍 Comparaison du mot de passe :", isMatch);
 
+    let collaborator = null;
+
+    if (user.role === "collaborateur") {
+      collaborator = await Collaborator.findOne({
+        firstName: user.firstName,
+        lastName: user.name, // user.name = nom de famille
+        cabinet: user.cabinet
+      });
+
+      if (!collaborator) {
+        console.warn("⚠️ Aucun collaborateur correspondant trouvé !");
+      }
+    }
+
     if (!isMatch) {
       console.log("❌ Mot de passe incorrect !");
       return res.status(400).json({ message: "Mot de passe incorrect" });
@@ -108,7 +123,8 @@ router.post("/login", async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        cabinet: user.cabinet
+        cabinet: user.cabinet,
+        collaboratorId: collaborator ? collaborator._id : null // 👈 AJOUT ICI
       }
     });
   } catch (err) {
