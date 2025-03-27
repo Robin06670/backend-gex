@@ -24,6 +24,7 @@ router.post("/invite", verifyToken, async (req, res) => {
 
     // 🔄 Met à jour le user invité
     userToInvite.cabinet = adminUser.cabinet._id;
+    userToInvite.role = role;
     await userToInvite.save();
 
     // 👥 Met à jour la liste des membres du cabinet
