@@ -7,7 +7,7 @@ const verifyToken = require("../middleware/authMiddleware");
 // 🔒 Invite un utilisateur existant à rejoindre le cabinet de l'admin connecté
 router.post("/invite", verifyToken, async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, role } = req.body;
 
     // 🔐 Récupère l'utilisateur qui invite (admin)
     const adminUser = await User.findById(req.user.id).populate("cabinet");

@@ -22,7 +22,7 @@ router.post("/register", async (req, res) => {
       name,
       email,
       password,
-      role: role || "collaborateur"
+      role: "admin" // 👈 Forcé, pas modifiable
     });
 
     await user.save();
