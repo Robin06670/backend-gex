@@ -137,10 +137,32 @@ router.post("/login", async (req, res) => {
 router.get("/me", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
+
     if (!user) {
       return res.status(404).json({ message: "Utilisateur introuvable" });
     }
-    res.json(user);
+
+    let collaboratorId = null;
+
+    if (user.role === "collaborateur") {
+      const matchedCollaborator = await Collaborator.findOne({
+        user: user._id,
+      });
+
+      if (matchedCollaborator) {
+        collaboratorId = matchedCollaborator._id;
+      }
+    }
+
+    res.json({
+      id: user._id,
+      firstName: user.firstName,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      cabinet: user.cabinet,
+      collaboratorId, // 👈 ici !
+    });
   } catch (err) {
     console.error("❌ Erreur lors de la récupération de l'utilisateur :", err);
     res.status(500).json({ message: "Erreur serveur" });
