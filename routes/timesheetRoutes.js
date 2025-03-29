@@ -1,16 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const verifyToken = require("../middleware/authMiddleware");
-const TimesheetEntry = require("../models/TimesheetEntry");
-const Collaborator = require("../models/Collaborator");
+const Timesheet = require("../models/Timesheet");
 
-router.use(verifyToken); // 🔐 Sécurise toutes les routes
+router.use(verifyToken);
 
-// ✅ POST - Ajouter une ligne de feuille de temps
+// ➕ Ajouter une ligne dans la feuille de temps du jour
 router.post("/", async (req, res) => {
   try {
     const {
-      collaborator, // obligatoire (ObjectId)
       date,
       client,
       task,
@@ -22,21 +20,14 @@ router.post("/", async (req, res) => {
       montant,
     } = req.body;
 
-    // Vérifier que le collaborateur appartient au même cabinet que l'utilisateur connecté
-    const collab = await Collaborator.findById(collaborator);
+    const collaboratorId = req.user.collaborator; // injecté par le middleware
 
-    if (!collab) {
-      return res.status(404).json({ error: "Collaborateur introuvable." });
+    if (!collaboratorId) {
+      return res.status(400).json({ message: "Collaborateur non lié à cet utilisateur." });
     }
 
-    if (String(collab.cabinet) !== String(req.user.cabinet)) {
-      return res.status(403).json({ error: "Accès non autorisé à ce collaborateur." });
-    }
-
-    const entry = await TimesheetEntry.create({
-      collaborator,
-      date,
-      client: client || null,
+    const entry = {
+      client,
       task,
       comment,
       startTime,
@@ -44,12 +35,55 @@ router.post("/", async (req, res) => {
       duration,
       facturable,
       montant,
-    });
+    };
 
-    res.status(201).json(entry);
+    let timesheet = await Timesheet.findOne({ collaborator: collaboratorId, date });
+
+    if (!timesheet) {
+      // Créer la feuille si elle n'existe pas
+      timesheet = new Timesheet({
+        collaborator: collaboratorId,
+        date,
+        entries: [entry],
+      });
+    } else {
+      if (timesheet.isLocked) {
+        return res.status(403).json({ message: "Feuille verrouillée." });
+      }
+      timesheet.entries.push(entry);
+    }
+
+    await timesheet.save();
+    res.status(201).json(timesheet);
   } catch (err) {
-    console.error("Erreur création timesheet :", err);
-    res.status(500).json({ error: "Erreur serveur" });
+    console.error("Erreur ajout ligne :", err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// 📥 Charger les entrées du jour
+router.get("/:date", async (req, res) => {
+  try {
+    const { date } = req.params;
+    const collaboratorId = req.user.collaborator;
+
+    if (!collaboratorId) {
+      return res.status(400).json({ message: "Collaborateur non lié à cet utilisateur." });
+    }
+
+    const timesheet = await Timesheet.findOne({ collaborator: collaboratorId, date }).populate("entries.client");
+
+    if (!timesheet) {
+      return res.status(200).json({ entries: [], isLocked: false });
+    }
+
+    res.status(200).json({
+      entries: timesheet.entries,
+      isLocked: timesheet.isLocked,
+    });
+  } catch (err) {
+    console.error("Erreur chargement timesheet:", err);
+    res.status(500).json({ message: "Erreur serveur" });
   }
 });
 

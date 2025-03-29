@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const Collaborator = require("../models/Collaborator");
 
-const verifyToken = (req, res, next) => {
+const verifyToken = async (req, res, next) => {
   const token = req.header("Authorization");
 
   if (!token) {
@@ -10,16 +11,22 @@ const verifyToken = (req, res, next) => {
   try {
     const verified = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
 
-    // ✅ On transmet l'id, le rôle ET le cabinet via req.user
     req.user = {
       id: verified.id,
       role: verified.role,
-      cabinet: verified.cabinet, // ← ajouté ici
+      cabinet: verified.cabinet,
     };
+
+    // 🔍 Récupération du Collaborator lié à l'utilisateur
+    const collab = await Collaborator.findOne({ user: verified.id });
+    if (collab) {
+      req.user.collaborator = collab._id;
+    }
 
     next();
   } catch (err) {
-    res.status(400).json({ message: "Token invalide." });
+    console.error("Erreur authMiddleware :", err);
+    res.status(400).json({ message: "Token invalide ou erreur serveur." });
   }
 };
 
