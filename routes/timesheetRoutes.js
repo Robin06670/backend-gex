@@ -122,7 +122,10 @@ router.put("/:date/entry/:index", async (req, res) => {
   try {
     const { date, index } = req.params;
     const collaboratorId = req.user.collaborator;
-    const newEntry = req.body;
+    const newEntry = {
+      ...req.body,
+      client: req.body.client === "none" || req.body.client === "" ? null : req.body.client
+    };    
 
     const timesheet = await Timesheet.findOne({ collaborator: collaboratorId, date });
 
