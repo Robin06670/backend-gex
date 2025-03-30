@@ -222,7 +222,7 @@ router.get("/stats/:id", requireAuth, async (req, res) => {
   try {
     const match = {
       collaborator: new mongoose.Types.ObjectId(collaboratorId),
-      date: { $gte: new Date(from), $lte: new Date(to) }
+      date: { $gte: from, $lte: to }
     };
 
     const pipeline = [
