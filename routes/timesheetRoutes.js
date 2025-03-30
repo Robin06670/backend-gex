@@ -27,7 +27,7 @@ router.post("/", async (req, res) => {
     }
 
     const entry = {
-      client,
+      client: client === "none" || client === "" ? null : client,
       task,
       comment,
       startTime,
