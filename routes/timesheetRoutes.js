@@ -220,11 +220,15 @@ router.get("/stats/:collaboratorId", requireAuth, async (req, res) => {
     const { from, to, clientId } = req.query;
     const { collaboratorId } = req.params;
 
+    // 🔧 Correction : conversion des dates en objets Date
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
     const matchStage = {
       collaborator: collaboratorId,
       date: {
-        $gte: from,
-        $lte: to,
+        $gte: fromDate,
+        $lte: toDate,
       },
     };
 
