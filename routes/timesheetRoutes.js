@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const verifyToken = require("../middleware/authMiddleware");
 const Timesheet = require("../models/Timesheet");
+const requireAuth = require("../middleware/authMiddleware");
 
 router.use(verifyToken);
 
@@ -179,6 +180,37 @@ router.delete("/:date/entry/:index", async (req, res) => {
   } catch (err) {
     console.error("Erreur suppression ligne :", err);
     res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+// 📅 Récupérer toutes les feuilles de temps d'un collaborateur
+router.get("/collaborator/:id", requireAuth, async (req, res) => {
+  try {
+    const collaboratorId = req.params.id;
+
+    const timesheets = await Timesheet.find({ collaborator: collaboratorId })
+      .populate({
+        path: "entries.client",
+        select: "company", // ou "nom" selon ton modèle Client
+      });
+
+    const allEntries = timesheets.flatMap(ts =>
+      ts.entries.map(entry => ({
+        date: ts.date,
+        clientName: entry.client?.company || "Non affectable",
+        task: entry.task,
+        comment: entry.comment,
+        start: entry.startTime,
+        end: entry.endTime,
+        duration: entry.duration,
+        billable: entry.facturable,
+        billableAmount: entry.montant,
+      }))
+    );
+
+    res.json(allEntries);
+  } catch (err) {
+    console.error("Erreur récupération timesheet du collaborateur :", err);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
