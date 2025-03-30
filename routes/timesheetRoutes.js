@@ -215,55 +215,56 @@ router.get("/collaborator/:id", requireAuth, async (req, res) => {
 });
 
 // GET /api/timesheets/stats/:collaboratorId
-router.get("/stats/:id", requireAuth, async (req, res) => {
-  const { from, to, clientId } = req.query;
-  const collaboratorId = req.params.id;
-
+// Récupération des stats d'un collaborateur dans une période
+router.get("/stats/:collaboratorId", async (req, res) => {
   try {
+    const { collaboratorId } = req.params;
+    const { from, to, client } = req.query;
+
     const match = {
-      collaborator: new mongoose.Types.ObjectId(collaboratorId),
-      date: { $gte: from, $lte: to }
+      collaborator: collaboratorId, // 🔧 correction ici
+      date: {
+        $gte: new Date(from),
+        $lte: new Date(to),
+      },
     };
 
-    const pipeline = [
-      { $match: match },
-      { $unwind: "$entries" },
-    ];
-
-    if (clientId) {
-      pipeline.push({
-        $match: {
-          "entries.client": new mongoose.Types.ObjectId(clientId),
-        },
-      });
+    if (client) {
+      match["entries.client"] = client;
     }
 
-    pipeline.push({
-      $group: {
-        _id: {
-          task: "$entries.task",
-          facturable: "$entries.facturable",
+    const timesheets = await Timesheet.aggregate([
+      { $match: match },
+      { $unwind: "$entries" },
+      { $match: client ? { "entries.client": client } : {} },
+      {
+        $group: {
+          _id: "$entries.task",
+          totalDuration: { $sum: "$entries.duration" },
+          facturableDuration: {
+            $sum: {
+              $cond: ["$entries.facturable", "$entries.duration", 0],
+            },
+          },
+          nonFacturableDuration: {
+            $sum: {
+              $cond: ["$entries.facturable", 0, "$entries.duration"],
+            },
+          },
         },
-        duration: { $sum: "$entries.duration" },
       },
-    });
+    ]);
 
-    pipeline.push({
-      $project: {
-        _id: 0,
-        task: "$_id.task",
-        facturable: "$_id.facturable",
-        duration: 1,
-      },
-    });
+    const total = timesheets.reduce(
+      (sum, t) => sum + t.totalDuration,
+      0
+    );
 
-    const stats = await Timesheet.aggregate(pipeline);
-    res.json(stats);
-  } catch (error) {
-    console.error("Erreur récupération stats collab :", error);
-    res.status(500).json({ error: "Échec récupération des statistiques" });
+    res.json({ timesheets, total });
+  } catch (err) {
+    console.error("Erreur stats:", err);
+    res.status(500).json({ message: "Erreur récupération stats" });
   }
 });
-
 
 module.exports = router;
