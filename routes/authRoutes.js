@@ -90,13 +90,13 @@ router.post("/login", async (req, res) => {
     if (user.role === "collaborateur") {
       collaborator = await Collaborator.findOne({
         firstName: user.firstName,
-        lastName: user.name, // user.name = nom de famille
+        lastName: user.name,
         cabinet: user.cabinet
       });
-
-      if (!collaborator) {
+      
+      if (!collaborator && user.role === "collaborateur") {
         console.warn("⚠️ Aucun collaborateur correspondant trouvé !");
-      }
+      }      
     }
 
     if (!isMatch) {
