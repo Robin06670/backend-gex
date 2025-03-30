@@ -215,46 +215,53 @@ router.get("/collaborator/:id", requireAuth, async (req, res) => {
 });
 
 // GET /api/timesheets/stats/:collaboratorId
-router.get("/stats/:collaboratorId", requireAuth, async (req, res) => {
-  try {
-    const { from, to, clientId } = req.query;
-    const { collaboratorId } = req.params;
+router.get("/stats/:id", requireAuth, async (req, res) => {
+  const { from, to, clientId } = req.query;
+  const collaboratorId = req.params.id;
 
-    const matchStage = {
-      collaborator: collaboratorId,
-      date: {
-        $gte: from,
-        $lte: to,
-      },
+  try {
+    const match = {
+      collaborator: new mongoose.Types.ObjectId(collaboratorId),
+      date: { $gte: new Date(from), $lte: new Date(to) }
     };
 
     const pipeline = [
-      { $match: matchStage },
+      { $match: match },
       { $unwind: "$entries" },
     ];
 
     if (clientId) {
       pipeline.push({
         $match: {
-          "entries.client": clientId,
+          "entries.client": new mongoose.Types.ObjectId(clientId),
         },
       });
     }
 
     pipeline.push({
-      $project: {
-        task: "$entries.task",
-        duration: "$entries.duration",
-        facturable: "$entries.facturable",
+      $group: {
+        _id: {
+          task: "$entries.task",
+          facturable: "$entries.facturable",
+        },
+        duration: { $sum: "$entries.duration" },
       },
     });
 
-    const results = await Timesheet.aggregate(pipeline);
+    pipeline.push({
+      $project: {
+        _id: 0,
+        task: "$_id.task",
+        facturable: "$_id.facturable",
+        duration: 1,
+      },
+    });
 
-    res.json(results);
-  } catch (err) {
-    console.error("Erreur statistiques collaborateur:", err);
-    res.status(500).json({ error: "Erreur serveur lors du calcul des statistiques" });
+    const stats = await Timesheet.aggregate(pipeline);
+    res.json(stats);
+  } catch (error) {
+    console.error("Erreur récupération stats collab :", error);
+    res.status(500).json({ error: "Échec récupération des statistiques" });
   }
 });
 
