@@ -71,7 +71,10 @@ router.get("/:date", async (req, res) => {
       return res.status(400).json({ message: "Collaborateur non lié à cet utilisateur." });
     }
 
-    const timesheet = await Timesheet.findOne({ collaborator: collaboratorId, date }).populate("entries.client");
+    const timesheet = await Timesheet.findOne({ collaborator: collaboratorId, date }).populate({
+      path: "entries.client",
+      select: "company", // ou "nom" selon ton schéma Client
+    });    
 
     if (!timesheet) {
       return res.status(200).json({ entries: [], isLocked: false });
