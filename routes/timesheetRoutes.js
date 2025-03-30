@@ -214,5 +214,49 @@ router.get("/collaborator/:id", requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/timesheets/stats/:collaboratorId
+router.get("/stats/:collaboratorId", requireAuth, async (req, res) => {
+  try {
+    const { from, to, clientId } = req.query;
+    const { collaboratorId } = req.params;
+
+    const matchStage = {
+      collaborator: collaboratorId,
+      date: {
+        $gte: from,
+        $lte: to,
+      },
+    };
+
+    const pipeline = [
+      { $match: matchStage },
+      { $unwind: "$entries" },
+    ];
+
+    if (clientId) {
+      pipeline.push({
+        $match: {
+          "entries.client": clientId,
+        },
+      });
+    }
+
+    pipeline.push({
+      $project: {
+        task: "$entries.task",
+        duration: "$entries.duration",
+        facturable: "$entries.facturable",
+      },
+    });
+
+    const results = await Timesheet.aggregate(pipeline);
+
+    res.json(results);
+  } catch (err) {
+    console.error("Erreur statistiques collaborateur:", err);
+    res.status(500).json({ error: "Erreur serveur lors du calcul des statistiques" });
+  }
+});
+
 
 module.exports = router;
