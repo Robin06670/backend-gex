@@ -238,27 +238,16 @@ router.get("/stats/:collaboratorId", async (req, res) => {
       { $unwind: "$entries" },
       { $match: client ? { "entries.client": client } : {} },
       {
-        $group: {
-          _id: "$entries.task",
-          totalDuration: { $sum: "$entries.duration" },
-          facturableDuration: {
-            $sum: {
-              $cond: ["$entries.facturable", "$entries.duration", 0],
-            },
-          },
-          nonFacturableDuration: {
-            $sum: {
-              $cond: ["$entries.facturable", 0, "$entries.duration"],
-            },
-          },
-        },
-      },
+        $project: {
+          task: "$entries.task",
+          duration: "$entries.duration",
+          facturable: "$entries.facturable"
+        }
+      }
     ]);
+    
 
-    const total = timesheets.reduce(
-      (sum, t) => sum + t.totalDuration,
-      0
-    );
+    const total = timesheets.reduce((sum, entry) => sum + entry.duration, 0);
 
     res.json({ timesheets, total });
   } catch (err) {
