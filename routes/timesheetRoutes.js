@@ -214,44 +214,46 @@ router.get("/collaborator/:id", requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/timesheets/stats/:collaboratorId
-// Récupération des stats d'un collaborateur dans une période
+// ✅ Route corrigée : stats par collaborateur et période
 router.get("/stats/:collaboratorId", async (req, res) => {
   try {
     const { collaboratorId } = req.params;
     const { from, to, client } = req.query;
 
     const match = {
-      collaborator: collaboratorId, // 🔧 correction ici
+      collaborator: new mongoose.Types.ObjectId(collaboratorId),
       date: {
         $gte: new Date(from),
         $lte: new Date(to),
       },
     };
 
-    if (client) {
-      match["entries.client"] = client;
-    }
-
-    const timesheets = await Timesheet.aggregate([
+    const pipeline = [
       { $match: match },
       { $unwind: "$entries" },
-      { $match: client ? { "entries.client": client } : {} },
-      {
-        $project: {
-          task: "$entries.task",
-          duration: "$entries.duration",
-          facturable: "$entries.facturable"
-        }
+    ];
+
+    if (client) {
+      pipeline.push({
+        $match: { "entries.client": new mongoose.Types.ObjectId(client) }
+      });
+    }
+
+    pipeline.push({
+      $project: {
+        task: "$entries.task",
+        duration: "$entries.duration",
+        facturable: "$entries.facturable"
       }
-    ]);
-    
+    });
+
+    const timesheets = await Timesheet.aggregate(pipeline);
 
     const total = timesheets.reduce((sum, entry) => sum + entry.duration, 0);
 
     res.json({ timesheets, total });
   } catch (err) {
-    console.error("Erreur stats:", err);
+    console.error("Erreur récupération stats:", err);
     res.status(500).json({ message: "Erreur récupération stats" });
   }
 });
