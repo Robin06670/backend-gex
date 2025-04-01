@@ -221,6 +221,11 @@ router.get("/stats/:collaboratorId", async (req, res) => {
     const { collaboratorId } = req.params;
     const { from, to, client } = req.query;
 
+    console.log("📥 Requête reçue pour stats");
+    console.log("➡️ Collaborator ID:", collaboratorId);
+    console.log("🗓️ From:", from, "To:", to);
+    if (client) console.log("🎯 Client filtré:", client);
+
     // 🔒 Vérification des IDs
     if (!mongoose.Types.ObjectId.isValid(collaboratorId)) {
       return res.status(400).json({ message: "ID collaborateur invalide" });
@@ -238,6 +243,8 @@ router.get("/stats/:collaboratorId", async (req, res) => {
         $lte: new Date(to),
       },
     };
+
+    console.log("🔍 Match utilisé :", JSON.stringify(match, null, 2));
 
     const pipeline = [
       { $match: match },
@@ -260,15 +267,20 @@ router.get("/stats/:collaboratorId", async (req, res) => {
 
     // 📊 Exécution
     const timesheets = await Timesheet.aggregate(pipeline);
+
+    console.log("📊 Résultat aggregation :", timesheets);
+
     const total = timesheets.reduce((sum, entry) => sum + entry.duration, 0);
+
+    console.log("🧮 Total minutes :", total);
 
     res.json({ timesheets, total });
 
   } catch (err) {
-    console.error("Erreur récupération stats:", err); // stack technique
+    console.error("❌ Erreur récupération stats:", err);
     res.status(500).json({
       message: "Erreur récupération stats",
-      error: err.message // 🔍 pour voir l'erreur dans le frontend
+      error: err.message
     });
   }
 });
