@@ -214,12 +214,22 @@ router.get("/collaborator/:id", requireAuth, async (req, res) => {
   }
 });
 
-// ✅ Route corrigée : stats par collaborateur et période
+// ✅ Route sécurisée : statistiques d'un collaborateur
 router.get("/stats/:collaboratorId", async (req, res) => {
   try {
     const { collaboratorId } = req.params;
     const { from, to, client } = req.query;
 
+    // 🔒 Vérification des IDs
+    if (!mongoose.Types.ObjectId.isValid(collaboratorId)) {
+      return res.status(400).json({ message: "ID collaborateur invalide" });
+    }
+
+    if (client && !mongoose.Types.ObjectId.isValid(client)) {
+      return res.status(400).json({ message: "ID client invalide" });
+    }
+
+    // 🎯 Construction de la requête d'agrégation
     const match = {
       collaborator: new mongoose.Types.ObjectId(collaboratorId),
       date: {
@@ -247,14 +257,18 @@ router.get("/stats/:collaboratorId", async (req, res) => {
       }
     });
 
+    // 📊 Exécution
     const timesheets = await Timesheet.aggregate(pipeline);
-
     const total = timesheets.reduce((sum, entry) => sum + entry.duration, 0);
 
     res.json({ timesheets, total });
+
   } catch (err) {
-    console.error("Erreur récupération stats:", err);
-    res.status(500).json({ message: "Erreur récupération stats" });
+    console.error("Erreur récupération stats:", err); // stack technique
+    res.status(500).json({
+      message: "Erreur récupération stats",
+      error: err.message // 🔍 pour voir l'erreur dans le frontend
+    });
   }
 });
 
