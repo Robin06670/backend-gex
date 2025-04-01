@@ -259,17 +259,15 @@ router.get("/stats/:collaboratorId", async (req, res) => {
 const Collaborator = require("../models/Collaborator");
 const Client = require("../models/Client");
 
+// ✅ Lister les clients liés à un collaborateur
 router.get("/collaborators/:id/clients", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const collaborator = await Collaborator.findById(id).populate("clients").lean();
+    // On cherche tous les clients qui ont ce collaborateur dans leur champ "collaborator"
+    const clients = await Client.find({ collaborator: id });
 
-    if (!collaborator) {
-      return res.status(404).json({ message: "Collaborateur non trouvé" });
-    }
-    
-    res.json(collaborator.clients);
+    res.json(clients);
   } catch (err) {
     console.error("Erreur récupération clients du collaborateur:", err);
     res.status(500).json({ message: "Erreur serveur" });
