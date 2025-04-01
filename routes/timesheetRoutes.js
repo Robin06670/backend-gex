@@ -263,12 +263,12 @@ router.get("/collaborators/:id/clients", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const collaborator = await Collaborator.findById(id).populate("clients");
+    const collaborator = await Collaborator.findById(id).populate("clients").lean();
 
     if (!collaborator) {
       return res.status(404).json({ message: "Collaborateur non trouvé" });
     }
-
+    
     res.json(collaborator.clients);
   } catch (err) {
     console.error("Erreur récupération clients du collaborateur:", err);
