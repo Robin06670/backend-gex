@@ -239,9 +239,9 @@ router.get("/stats/:collaboratorId", async (req, res) => {
     const match = {
       collaborator: new mongoose.Types.ObjectId(collaboratorId),
       date: {
-        $gte: new Date(from),
-        $lte: new Date(to),
-      },
+        $gte: from,
+        $lte: to,
+      }      
     };
 
     console.log("🔍 Match utilisé :", JSON.stringify(match, null, 2));
