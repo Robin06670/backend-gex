@@ -261,7 +261,8 @@ router.get("/stats/:collaboratorId", async (req, res) => {
       $project: {
         task: "$entries.task",
         duration: "$entries.duration",
-        facturable: "$entries.facturable"
+        facturable: "$entries.facturable",
+        amount: "$entries.montant" // 👈 AJOUTÉ ICI
       }
     });
 
