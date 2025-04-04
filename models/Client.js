@@ -11,14 +11,6 @@ const ClientSchema = new mongoose.Schema({
     ref: "Cabinet",
     required: true
   },
-  firstName: {
-    type: String,
-    required: true
-  },
-  lastName: {
-    type: String,
-    required: true
-  },
   phone: {
     type: String
   },
@@ -34,9 +26,24 @@ const ClientSchema = new mongoose.Schema({
   company: {                  // ✅ AJOUTÉ
     type: String
   },
-  fees: {
+  siren: {
+    type: String
+  },
+  employees: {
     type: Number
   },
+  employeeRate: {
+    type: Number
+  },
+  feesAccounting: {
+    type: Number
+  },
+  feesSocial: {
+    type: Number
+  },
+  feesLegal: {
+    type: Number
+  },  
   cost: {                     // ✅ AJOUTÉ
     type: Number
   },

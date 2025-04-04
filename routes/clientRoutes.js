@@ -190,30 +190,39 @@ router.get("/:id", auth, async (req, res) => {
 // 📌 Ajouter un client lié au user
 router.post("/", auth, async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, address, company, fees, activity, theoreticalTime, collaborator } = req.body;
+    const {
+      company, activity, siren,
+      employees, employeeRate,
+      feesAccounting, feesSocial, feesLegal,
+      email, phone, address,
+      theoreticalTime, collaborator,
+    } = req.body;    
 
     const collabExists = await Collaborator.findById(collaborator);
     if (!collabExists) {
       return res.status(400).json({ message: "Le collaborateur spécifié n'existe pas." });
     }
 
-    const margin = await calculateMargin(fees, collaborator, theoreticalTime);
+    const totalFees = Number(feesAccounting) + Number(feesSocial) + Number(feesLegal);
+    const margin = await calculateMargin(totalFees, collaborator, theoreticalTime);
 
     const newClient = new Client({
-      firstName,
-      lastName,
+      company,
+      activity,
+      siren,
+      employees,
+      employeeRate,
+      feesAccounting,
+      feesSocial,
+      feesLegal,
       email,
       phone,
       address,
-      company,
-      fees: Number(fees),
-      activity,
       theoreticalTime: Number(theoreticalTime),
       collaborator,
-      margin,
-      user: req.user.id, // ✅ Lien direct avec l'utilisateur connecté
-      cabinet: req.user.cabinet  // 👈 ajout ici
-    });
+      user: req.user.id,
+      cabinet: req.user.cabinet
+    });    
 
     await newClient.save();
     res.status(201).json(newClient);
@@ -235,7 +244,13 @@ router.put("/:id", auth, async (req, res) => {
       return res.status(404).json({ message: "Client non trouvé ou non autorisé." });
     }
 
-    const { firstName, lastName, email, phone, address, company, fees, activity, theoreticalTime, collaborator } = req.body;
+    const {
+      company, activity, siren,
+      employees, employeeRate,
+      feesAccounting, feesSocial, feesLegal,
+      email, phone, address,
+      theoreticalTime, collaborator
+    } = req.body;    
 
     if (collaborator) {
       const collabExists = await Collaborator.findById(collaborator);
@@ -244,19 +259,23 @@ router.put("/:id", auth, async (req, res) => {
       }
     }
 
-    const updatedMargin = await calculateMargin(fees, collaborator || clientExists.collaborator, theoreticalTime);
+    const totalFees = Number(feesAccounting) + Number(feesSocial) + Number(feesLegal);
+    const updatedMargin = await calculateMargin(totalFees, collaborator || clientExists.collaborator, theoreticalTime);
 
     const updatedClient = await Client.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },
       {
-        firstName,
-        lastName,
+        company,
+        activity,
+        siren,
+        employees,
+        employeeRate,
+        feesAccounting,
+        feesSocial,
+        feesLegal,
         email,
         phone,
         address,
-        company,
-        fees: Number(fees),
-        activity,
         theoreticalTime: Number(theoreticalTime),
         collaborator,
         margin: updatedMargin,
