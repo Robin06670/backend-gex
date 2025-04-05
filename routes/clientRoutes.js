@@ -219,13 +219,19 @@ router.post("/", auth, async (req, res) => {
       theoreticalTime, collaborator,
     } = req.body;    
 
-    const collabExists = await Collaborator.findById(collaborator);
-    if (!collabExists) {
-      return res.status(400).json({ message: "Le collaborateur spécifié n'existe pas." });
+    let collabExists = null;
+    if (collaborator) {
+      collabExists = await Collaborator.findById(collaborator);
+      if (!collabExists) {
+        return res.status(400).json({ message: "Le collaborateur spécifié n'existe pas." });
+      }
     }
 
+
     const totalFees = Number(feesAccounting) + Number(feesSocial) + Number(feesLegal);
-    const margin = await calculateMargin(totalFees, collaborator, theoreticalTime);
+    const margin = collaborator
+      ? await calculateMargin(totalFees, collaborator, theoreticalTime)
+      : null;
 
     const newClient = new Client({
       company,
@@ -241,6 +247,7 @@ router.post("/", auth, async (req, res) => {
       address,
       theoreticalTime: Number(theoreticalTime),
       collaborator,
+      margin,
       user: req.user.id,
       cabinet: req.user.cabinet
     });    
