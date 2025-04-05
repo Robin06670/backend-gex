@@ -26,7 +26,20 @@ router.get("/revenue", auth, async (req, res) => {
 
     const revenue = await Client.aggregate([
       { $match: filter },
-      { $group: { _id: null, total: { $sum: "$fees" } } }
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: {
+              $add: [
+                { $ifNull: ["$feesAccounting", 0] },
+                { $ifNull: ["$feesSocial", 0] },
+                { $ifNull: ["$feesLegal", 0] }
+              ]
+            }
+          }
+        }
+      }      
     ]);
 
     console.log("Revenue Aggregation Result:", revenue);
@@ -51,7 +64,15 @@ router.get("/revenue-by-collaborator", auth, async (req, res) => {
       {
         $group: {
           _id: "$collaborator",
-          totalRevenue: { $sum: "$fees" }
+          totalRevenue: {
+            $sum: {
+              $add: [
+                { $ifNull: ["$feesAccounting", 0] },
+                { $ifNull: ["$feesSocial", 0] },
+                { $ifNull: ["$feesLegal", 0] }
+              ]
+            }
+          }          
         }
       },
       {
