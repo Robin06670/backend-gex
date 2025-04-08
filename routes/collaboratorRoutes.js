@@ -205,4 +205,24 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
+// 📌 PATCH pour mise à jour partielle (position notamment)
+router.patch("/:id", auth, async (req, res) => {
+  try {
+    const updated = await Collaborator.findOneAndUpdate(
+      { _id: req.params.id, cabinet: req.user.cabinet },
+      { $set: req.body },
+      { new: true }
+    ).lean();
+
+    if (!updated) {
+      return res.status(404).json({ message: "Collaborateur introuvable ou non autorisé" });
+    }
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Erreur PATCH collaborateur :", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 module.exports = router;

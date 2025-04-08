@@ -10,6 +10,10 @@ const CollaboratorSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Cabinet",
     required: true
+  },
+  position: {
+    type: Object,
+    default: null
   },  
   clients: [
     {
